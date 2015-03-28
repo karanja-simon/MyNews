@@ -36,10 +36,11 @@ public class JPanelGreenPolicy extends javax.swing.JPanel {
         setBackground(new java.awt.Color(255, 255, 255));
         setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(153, 153, 153)));
 
+        jPanel1.setOpaque(false);
+
         webLabel4.setBackground(new java.awt.Color(240, 240, 240));
         webLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        webLabel4.setText("<html><p style=\"text-align:center\">\nWe are very passoinate about our enviroment &amp; thats <br/>\nwhy we have written this and all our application user manual<br/>\n in e-format.<br/>\nPlease download it/them at <a href=\"#\"> http://www.chieflabs.com/products</a><br/>\nLETS GO GREEN, LETS SAVE TREES!<br/>\nchieflabs &copy 2014.</p>\n");
-        webLabel4.setFont(new java.awt.Font("Lao UI", 0, 10)); // NOI18N
+        webLabel4.setText("<html><p style=\"text-align:center\">\nWe are very passoinate about our enviroment &amp; thats <br/>\nwhy we have written this and all our application user manuals<br/>\n in e-format.<br/>\nPlease download it/them at <a href=\"#\"> http://www.chieflabs.com/products</a><br/>\nLETS GO GREEN, LETS SAVE TREES!<br/>\nchieflabs &copy 2014.</p>\n");
         webLabel4.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         webLabel4.setIconTextGap(20);
         webLabel4.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -48,19 +49,19 @@ public class JPanelGreenPolicy extends javax.swing.JPanel {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(webLabel4)
+            .addComponent(webLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(webLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 9, Short.MAX_VALUE))
+                .addContainerGap(20, Short.MAX_VALUE))
         );
 
         webLabel3.setBackground(new java.awt.Color(240, 240, 240));
         webLabel3.setForeground(new java.awt.Color(255, 102, 0));
         webLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        webLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/paperless.png"))); // NOI18N
+        webLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/gogreen.PNG"))); // NOI18N
         webLabel3.setFont(new java.awt.Font("Tahoma", 0, 10)); // NOI18N
         webLabel3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         webLabel3.setIconTextGap(20);
@@ -71,14 +72,15 @@ public class JPanelGreenPolicy extends javax.swing.JPanel {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(webLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(webLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(webLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, 0)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 

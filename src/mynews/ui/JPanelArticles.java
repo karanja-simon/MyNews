@@ -77,6 +77,9 @@ public class JPanelArticles extends javax.swing.JPanel {
     public void setjLabelDate(JLabel jLabelDate) {
         this.jLabelDate = jLabelDate;
     }
+    public void setArticleTitle(String title){
+        jLabelTitle.setText(title);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -94,14 +97,17 @@ public class JPanelArticles extends javax.swing.JPanel {
         jLabelImage = new javax.swing.JLabel();
         jButtonDelete = new javax.swing.JButton();
         jButtonRead = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jPanel3 = new javax.swing.JPanel();
         jLabelDate = new javax.swing.JLabel();
+        jLabelTitle = new javax.swing.JLabel();
 
         jPanelHolder.setBackground(new java.awt.Color(255, 255, 255));
 
         jScrollPane2.setBorder(null);
 
         jTextPaneArticle.setBorder(null);
-        jTextPaneArticle.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
+        jTextPaneArticle.setFont(new java.awt.Font("Tahoma", 0, 10)); // NOI18N
         jTextPaneArticle.setForeground(new java.awt.Color(51, 51, 51));
         jTextPaneArticle.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
@@ -114,6 +120,7 @@ public class JPanelArticles extends javax.swing.JPanel {
         jScrollPane2.setViewportView(jTextPaneArticle);
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel1.setOpaque(false);
         jPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 jPanel1MouseEntered(evt);
@@ -123,14 +130,15 @@ public class JPanelArticles extends javax.swing.JPanel {
             }
         });
 
-        jButtonDelete.setFont(new java.awt.Font("Lao UI", 0, 11)); // NOI18N
+        jButtonDelete.setBackground(new java.awt.Color(255, 255, 255));
         jButtonDelete.setForeground(new java.awt.Color(51, 51, 51));
-        jButtonDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/delete_32.png"))); // NOI18N
+        jButtonDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/cancel.png"))); // NOI18N
         jButtonDelete.setText("Delete");
         jButtonDelete.setContentAreaFilled(false);
         jButtonDelete.setFocusPainted(false);
         jButtonDelete.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButtonDelete.setIconTextGap(0);
+        jButtonDelete.setOpaque(true);
         jButtonDelete.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         jButtonDelete.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
@@ -146,14 +154,15 @@ public class JPanelArticles extends javax.swing.JPanel {
             }
         });
 
-        jButtonRead.setFont(new java.awt.Font("Lao UI", 0, 11)); // NOI18N
+        jButtonRead.setBackground(new java.awt.Color(255, 255, 255));
         jButtonRead.setForeground(new java.awt.Color(51, 51, 51));
-        jButtonRead.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/read.png"))); // NOI18N
+        jButtonRead.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/okay.png"))); // NOI18N
         jButtonRead.setText("Read");
         jButtonRead.setContentAreaFilled(false);
         jButtonRead.setFocusPainted(false);
         jButtonRead.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButtonRead.setIconTextGap(0);
+        jButtonRead.setOpaque(true);
         jButtonRead.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         jButtonRead.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
@@ -173,43 +182,91 @@ public class JPanelArticles extends javax.swing.JPanel {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jButtonDelete)
                     .addComponent(jButtonRead))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabelImage, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE))
+                .addGap(5, 5, 5)
+                .addComponent(jLabelImage, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jButtonDelete)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonRead))
+                .addGap(0, 0, 0)
+                .addComponent(jButtonRead, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addComponent(jLabelImage, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
+        jPanel3.setBackground(new java.awt.Color(255, 255, 255));
+
         jLabelDate.setBackground(new java.awt.Color(245, 245, 220));
-        jLabelDate.setFont(new java.awt.Font("Lao UI", 0, 11)); // NOI18N
         jLabelDate.setForeground(new java.awt.Color(51, 51, 51));
         jLabelDate.setText("     Sep 12 2014 8:09");
-        jLabelDate.setOpaque(true);
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabelDate, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(20, Short.MAX_VALUE))
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(2, 2, 2)
+                .addComponent(jLabelDate, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(2, 2, 2))
+        );
+
+        jLabelTitle.setBackground(new java.awt.Color(255, 255, 153));
+        jLabelTitle.setForeground(new java.awt.Color(0, 153, 204));
+        jLabelTitle.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/book_24.png"))); // NOI18N
+        jLabelTitle.setText("jLabel1");
+        jLabelTitle.setOpaque(true);
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabelTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 638, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jLabelTitle, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
 
         javax.swing.GroupLayout jPanelHolderLayout = new javax.swing.GroupLayout(jPanelHolder);
         jPanelHolder.setLayout(jPanelHolderLayout);
         jPanelHolderLayout.setHorizontalGroup(
             jPanelHolderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelHolderLayout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 629, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(8, 8, 8))
-            .addComponent(jLabelDate, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanelHolderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanelHolderLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelHolderLayout.createSequentialGroup()
+                        .addGap(5, 5, 5)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 495, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, 0)))
+                .addGap(0, 0, 0))
         );
         jPanelHolderLayout.setVerticalGroup(
             jPanelHolderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHolderLayout.createSequentialGroup()
-                .addComponent(jLabelDate, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
                 .addGroup(jPanelHolderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 116, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 116, Short.MAX_VALUE))
                 .addGap(0, 0, 0))
         );
 
@@ -232,51 +289,51 @@ public class JPanelArticles extends javax.swing.JPanel {
     }//GEN-LAST:event_jButtonDeleteActionPerformed
 
     private void jTextPaneArticleMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextPaneArticleMouseEntered
-        jTextPaneArticle.setBackground(new Color(154, 205, 50));
-        jPanelHolder.setBackground(new Color(154, 205, 50));
-        jPanel1.setBackground(new Color(154, 205, 50));
+        jTextPaneArticle.setBackground(new Color(240,240,240));
+        jPanelHolder.setBackground(new Color(240,240,240));
+        jPanel1.setBackground(new Color(240,240,240));
     }//GEN-LAST:event_jTextPaneArticleMouseEntered
 
     private void jTextPaneArticleMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTextPaneArticleMouseExited
-        jTextPaneArticle.setBackground(null);
-        jPanelHolder.setBackground(null);
-        jPanel1.setBackground(null);
+        jTextPaneArticle.setBackground(new Color(255,255,255));
+        jPanelHolder.setBackground(new Color(255,255,255));
+        jPanel1.setBackground(new Color(255,255,255));
     }//GEN-LAST:event_jTextPaneArticleMouseExited
 
     private void jPanel1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel1MouseEntered
-        jTextPaneArticle.setBackground(new Color(154, 205, 50));
-        jPanelHolder.setBackground(new Color(154, 205, 50));
-        jPanel1.setBackground(new Color(154, 205, 50));
+        jTextPaneArticle.setBackground(new Color(240,240,240));
+        jPanelHolder.setBackground(new Color(240,240,240));
+        jPanel1.setBackground(new Color(240,240,240));
     }//GEN-LAST:event_jPanel1MouseEntered
 
     private void jPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel1MouseExited
-        jTextPaneArticle.setBackground(null);
-        jPanelHolder.setBackground(null);
-        jPanel1.setBackground(null);
+        jTextPaneArticle.setBackground(new Color(255,255,255));
+        jPanelHolder.setBackground(new Color(255,255,255));
+        jPanel1.setBackground(new Color(255,255,255));
     }//GEN-LAST:event_jPanel1MouseExited
 
     private void jButtonReadMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonReadMouseEntered
-        jTextPaneArticle.setBackground(new Color(154, 205, 50));
-        jPanelHolder.setBackground(new Color(154, 205, 50));
-        jPanel1.setBackground(new Color(154, 205, 50));
+        jTextPaneArticle.setBackground(new Color(240,240,240));
+        jPanelHolder.setBackground(new Color(240,240,240));
+        jPanel1.setBackground(new Color(240,240,240));
     }//GEN-LAST:event_jButtonReadMouseEntered
 
     private void jButtonDeleteMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonDeleteMouseEntered
-        jTextPaneArticle.setBackground(new Color(154, 205, 50));
-        jPanelHolder.setBackground(new Color(154, 205, 50));
-        jPanel1.setBackground(new Color(154, 205, 50));
+        jTextPaneArticle.setBackground(new Color(240,240,240));
+        jPanelHolder.setBackground(new Color(240,240,240));
+        jPanel1.setBackground(new Color(240,240,240));
     }//GEN-LAST:event_jButtonDeleteMouseEntered
 
     private void jButtonDeleteMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonDeleteMouseExited
-        jTextPaneArticle.setBackground(null);
-        jPanelHolder.setBackground(null);
-        jPanel1.setBackground(null);
+        jTextPaneArticle.setBackground(new Color(255,255,255));
+        jPanelHolder.setBackground(new Color(255,255,255));
+        jPanel1.setBackground(new Color(255,255,255));
     }//GEN-LAST:event_jButtonDeleteMouseExited
 
     private void jButtonReadMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonReadMouseExited
-        jTextPaneArticle.setBackground(null);
-        jPanelHolder.setBackground(null);
-        jPanel1.setBackground(null);
+        jTextPaneArticle.setBackground(new Color(255,255,255));
+        jPanelHolder.setBackground(new Color(255,255,255));
+        jPanel1.setBackground(new Color(255,255,255));
     }//GEN-LAST:event_jButtonReadMouseExited
 
 
@@ -285,7 +342,10 @@ public class JPanelArticles extends javax.swing.JPanel {
     private javax.swing.JButton jButtonRead;
     private javax.swing.JLabel jLabelDate;
     private javax.swing.JLabel jLabelImage;
+    private javax.swing.JLabel jLabelTitle;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanelHolder;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextPane jTextPaneArticle;

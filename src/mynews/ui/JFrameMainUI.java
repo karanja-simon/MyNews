@@ -13,46 +13,30 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
-import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
-import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.basic.BasicComboPopup;
-import mynews.controllers.ControllerArchives;
-import mynews.controllers.Reader;
-import mynews.models.ModelNews;
+import mynews.controllers.Archives;
 import mynews.utils.CustomScrollbarUI;
+import mynews.utils.EnglishNumberToWord;
 import mynews.utils.SystemTime;
 import mynews.utils.TestInternetConnection;
 import mynews.utils.TweakUI;
@@ -64,350 +48,257 @@ import mynews.utils.TweakUI;
 public class JFrameMainUI extends javax.swing.JFrame {
 
     private Image image = null;
-    private int feedSize;
     private int index = 0;
-    private ModelNews mn = new ModelNews();
-    private String timeStamp;
-    private Timestamp stamp;
-    private final WebMenuItem wmiAbout;
-    private final WebMenuItem wmiGreenPolicy;
-    private final WebMenuItem wmiExport;
-    private final WebMenuItem wmiBackup;
-    private final WebMenuItem wmiNewNote;
-    private final WebMenuItem wmiTags;
+    private int counter = 10;
+    private int totalArticles = 0;
+    private WebMenuItem wmiAbout;
+    private WebMenuItem wmiGreenPolicy;
+    private WebMenuItem wmiNewNote;
+    private WebMenuItem wmiTags;
+    private WebMenuItem wmiClose;
+    private WebMenuItem wmiHelp;
     private JDialog gp;
-    private Reader newsReader;
-    private String newsCat;
+    private boolean netStatus = false;
 
-    ;    /**
+    /**
      * Creates new form JFrameMainUI
+     *
+     * @throws java.lang.ClassNotFoundException
+     * @throws javax.swing.UnsupportedLookAndFeelException
+     * @throws java.lang.InstantiationException
+     * @throws java.lang.IllegalAccessException
      */
-    public JFrameMainUI() {
-        this.newsCat = "internationalheadlines";
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            initComponents();
-            setJtextPane();
-            jLabelLoadingFeed.setVisible(false);
-            TweakUI.centerParent(this);
-            testNews(5, newsCat);
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            Logger.getLogger(JFrameMainUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        this.newsReader = new Reader(mn);
-        this.wmiTags = new WebMenuItem("Preferrences", Hotkey.T);
-        this.wmiNewNote = new WebMenuItem("Save News", Hotkey.V);
-        this.wmiBackup = new WebMenuItem("Backup the Notes", Hotkey.ALT_B);
-        this.wmiExport = new WebMenuItem("Export to a File", Hotkey.ALT_A);
-        this.wmiAbout = new WebMenuItem("About MyNews", Hotkey.ESCAPE);
-        this.wmiGreenPolicy = new WebMenuItem("Our Green Policy", Hotkey.ALT_Y);
-        //jPanel3.paintComponents(Graphics g);
-        jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
-        jScrollPane1.getVerticalScrollBar().setUI(new CustomScrollbarUI(Color.WHITE));
-        Object popup = webComboBoxCat.getUI().getAccessibleChild(webComboBoxCat, 0);
-        Component c = ((Container) popup).getComponent(0);
-        if (c instanceof JScrollPane) {
-            JScrollPane spane = (JScrollPane) c;
-            spane.getVerticalScrollBar().setUI(new CustomScrollbarUI(Color.WHITE));
-            JScrollBar scrollBar = spane.getVerticalScrollBar();
-            Dimension scrollBarDim = new Dimension(5, scrollBar
-                    .getPreferredSize().height);
-            scrollBar.setPreferredSize(scrollBarDim);
-        }
-        BasicComboPopup pop = (BasicComboPopup) popup;
-        pop.setBorder(null);
-        customJButtonEffects();
-        greenPolicy();
-        ActionListener taskPerformer = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent evt) {
-                if (TestInternetConnection.isNetAvailable()) {
-                    jLabelStatus.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/online.png")));
-                    jLabelStatus.setText("[ Online ]");
-                    jLabelStatus.setToolTipText("Connection established!");
-                } else {
-                    jLabelStatus.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/offline.png")));
-                    jLabelStatus.setText("[ Offline ]");
-                    jLabelStatus.setToolTipText("Connection cannot be established!");
-                }
-                SystemTime time = new SystemTime();
-                jLabelTime.setText(time.getTime());
-            }
-        };
-        Timer timer = new Timer(1000, taskPerformer);
-        timer.setRepeats(true);
-        timer.start();
-        loadNewsCategory();
-
+    public JFrameMainUI() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        setUIFont(new javax.swing.plaf.FontUIResource("Segoe UI Semilight", Font.PLAIN, 11));
+        initComponents();
+        initWebMenu();
+        TweakUI.centerParent(this);
+        image = new ImageIcon(getClass().getResource("/mynews/resources/mynews-d.png")).getImage();
+        jLabelLoadingFeed.setVisible(false);
+        initCustomScrollBar();
+        createJBtnHoverEffects();
+        initClockAndNetworkTimer(true);
     }
 
+    /**
+     * Returns an this class object
+     *
+     * @return
+     */
     private JFrameMainUI thisJFrame() {
         return this;
     }
 
-    private void loadNewsCategory() {
-        webComboBoxCat.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    System.out.println("selected cat: " + e.getItem());
-                    int selIndex = webComboBoxCat.getSelectedIndex();
-                    System.out.println("index: " + selIndex);
-                    switch (selIndex) {
-                        case 1:
-                            newsCat = "topstories";
-                            new LoadFeed(newsCat).execute();
-                            break;
-                        case 2:
-                            newsCat = "worldheadlines";
-                            new LoadFeed(newsCat).execute();
-                            break;
-                        case 3:
-                            newsCat = "usheadlines";
-                            new LoadFeed(newsCat).execute();
-                            break;
-                        case 4:
-                            newsCat = "politicsheadlines";
-                            new LoadFeed(newsCat).execute();
-                            break;
-                    }
-                    jLabelFeedLink.setText("http://feeds.abcnews.com/abcnews/"+newsCat);
-                }
-            }
-        });
+    /**
+     * Returns the internet connection status
+     *
+     * @return true, if code can access the feed server i.e.
+     * http://www.abcnews/feed/, false otherwise
+     */
+    public boolean isNetOn() {
+        return netStatus;
     }
 
-    private void setJtextPane() {
-        jTextPaneArticleContents.setContentType("text/html");
-        jTextPaneArticleContents.setText("<html><head></head>"
-                + "<body>"
-                + "<p style=\"margin-top: 0;font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#404040\">"
-                + "</p>"
-                + "</body>"
-                + "</html>");
+    /**
+     * Add an ActionListener to the Next button
+     *
+     * @param al JButton ActionListener
+     */
+    public void addBtnNextActionListener(ActionListener al) {
+        jButtonNext.addActionListener(al);
     }
 
-    private void greenPolicy() {
-        wmiGreenPolicy.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final JDialog gp = new JDialog(thisJFrame());
-                gp.setLayout(new BorderLayout());
-                JPanelGreenPolicy jpgp = new JPanelGreenPolicy();
-                gp.setSize(313, 350);
-                System.out.println(jpgp.getWidth());
-                gp.add(jpgp);
-                gp.addWindowFocusListener(new WindowFocusListener() {
-                    @Override
-                    public void windowLostFocus(WindowEvent e) {
-                        gp.dispose();
-                    }
-
-                    @Override
-                    public void windowGainedFocus(WindowEvent e) {
-                    }
-                });
-                int w = thisJFrame().getWidth();
-                int h = thisJFrame().getHeight();
-                int locx = (int) thisJFrame().getLocation().getX();
-                int locy = (int) thisJFrame().getLocation().getY();
-                System.out.println("loc (" + locx + " , " + locy + ")\nwidth: " + w + " height: " + h + " d h: " + gp.getHeight() + " d w: " + gp.getWidth());
-                gp.setLocation((locx + w / 2) - (gp.getWidth() / 2), (locy + h / 2) - (gp.getHeight() / 2));
-                gp.setUndecorated(true);
-                gp.setOpacity((float) 1.0);
-                gp.setVisible(true);
-            }
-        });
-        wmiAbout.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final JDialog gp = new JDialog(thisJFrame());
-                gp.setLayout(new BorderLayout());
-                JPanelAbout jpgp = new JPanelAbout();
-                gp.setSize(449, 390);
-                System.out.println(jpgp.getWidth());
-                gp.add(jpgp);
-                gp.addWindowFocusListener(new WindowFocusListener() {
-                    @Override
-                    public void windowLostFocus(WindowEvent e) {
-                        gp.dispose();
-                    }
-
-                    @Override
-                    public void windowGainedFocus(WindowEvent e) {
-                    }
-                });
-                int w = thisJFrame().getWidth();
-                int h = thisJFrame().getHeight();
-                int locx = (int) thisJFrame().getLocation().getX();
-                int locy = (int) thisJFrame().getLocation().getY();
-                System.out.println("loc (" + locx + " , " + locy + ")\nwidth: " + w + " height: " + h + " d h: " + gp.getHeight() + " d w: " + gp.getWidth());
-                gp.setLocation((locx + w / 2) - (gp.getWidth() / 2), (locy + h / 2) - (gp.getHeight() / 2));
-                gp.setUndecorated(true);
-                gp.setOpacity((float) 1.0);
-                gp.setVisible(true);
-            }
-        });
-
+    /**
+     * Add an ActionListener to the Download button
+     *
+     * @param al JButton ActionListener
+     */
+    public void addBtnDownloadActionListener(ActionListener al) {
+        jButtonDownload.addActionListener(al);
     }
 
-    private void customJButtonEffects() {
-
-        for (Component comp : jPanelBottom.getComponents()) {
-            if (comp instanceof JButton) {
-                JButton myButton = (JButton) comp;
-                myButton.setFocusPainted(false);
-                myButton.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-                        JButton btn = (JButton) e.getSource();
-                        btn.setOpaque(true);
-                        btn.setBackground(new Color(0, 204, 255));
-                        System.out.println(e.getSource());
-                    }
-
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-                        JButton btn = (JButton) e.getSource();
-                        btn.setOpaque(false);
-                    }
-                });
-            }
-        }
+    /**
+     * Add an ActionListener to the Archives button
+     *
+     * @param al JButton ActionListener
+     */
+    public void addBtnArchivesActionListener(ActionListener al) {
+        jButtonArchives.addActionListener(al);
     }
 
-    private class LoadFeed extends SwingWorker<Boolean, Integer> {
-
-        private String cat;
-
-        public LoadFeed(String cat) {
-            this.cat = cat;
-        }
-
-        @Override
-        @SuppressWarnings("SleepWhileInLoop")
-        protected Boolean doInBackground() throws Exception {
-            testNews(index, cat);
-            return true;
-        }
-
-        @Override
-        protected void done() {
-            jLabelLoadingFeed.setVisible(false);
-        }
-
-        @Override
-        protected void process(List<Integer> chunks) {
-            for (int i : chunks) {
-
-            }
-        }
-
+    /**
+     * Add an ActionListener to the Previous button
+     *
+     * @param al JButton ActionListener
+     */
+    public void addBtnPrevActionListener(ActionListener al) {
+        jButtonPrev.addActionListener(al);
     }
 
-    private class Download extends SwingWorker<Boolean, Integer> {
-
-        @Override
-        @SuppressWarnings("SleepWhileInLoop")
-        protected Boolean doInBackground() throws Exception {
-            downloadNews();
-            return true;
-        }
-
-        @Override
-        protected void done() {
-            jLabelLoadingFeed.setVisible(false);
-        }
-
-        @Override
-        protected void process(List<Integer> chunks) {
-            for (int i : chunks) {
-
-            }
-        }
-
+    /**
+     * Add an ActionListener to the Print button
+     *
+     * @param al JButton ActionListener
+     */
+    public void addBtnPrintActionListener(ActionListener al) {
+        jButtonPrint.addActionListener(al);
     }
 
-    private void testNews(int index, String cat) {
-        try {
-            stamp = new Timestamp(System.currentTimeMillis());
-            timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(Calendar.getInstance().getTime());
-            jLabelLoadingFeed.setText("Loading News. Hold on!");
-            newsReader.readFeed(cat);
-            feedSize = mn.getArticleTitle().length;
-            System.out.println("image: " + mn.getArticleImage()[index]);
-            image = ImageIO.read(mn.getArticleImage()[index]);
-            System.out.println(image);
-            image = image.getScaledInstance(jPanelTop.getWidth(), jPanelTop.getHeight(), Image.SCALE_SMOOTH);
-            jTextPaneArticleContents.setText(template(mn.getArticleBody()[index].trim()));
-            jLabelArticleTitle.setText(mn.getArticleTitle()[index]);
-            jLabelArticleDate.setText(mn.getArticleDate()[index]);
-            jLabelFeedLink.setText(mn.getFeedLink());
-            jPanelTop.repaint();
-            this.revalidate();
-            this.pack();
-
-        } catch (Exception ex) {
-            System.out.println(ex);
-        }
+    /**
+     * Sets the article content/body
+     *
+     * @param news Article body
+     */
+    public void setArticleContent(String news) {
+        jTextPaneArticleContents.setText(news);
     }
 
-    private void downloadNews() {
-        Date date = new Date(stamp.getTime());
-        System.out.println(date);
-        InputStream in = null;
-        try {
-            in = new BufferedInputStream(mn.getArticleImage()[index].openStream());
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buf = new byte[1024];
-            int n = 0;
-            while (-1 != (n = in.read(buf))) {
-                out.write(buf, 0, n);
-            }
-            out.close();
-            in.close();
-            byte[] response1 = out.toByteArray();
-            FileOutputStream fos = new FileOutputStream("images/" + timeStamp + ".jpg");
-            fos.write(response1);
-            fos.close();
-            // Write article.
-            BufferedWriter outfile = new BufferedWriter(new FileWriter("articles/" + timeStamp + ".html"));
-            String article = jTextPaneArticleContents.getText();
-            String newArticle = article.replaceAll("<p style=\"margin-top: 0\">", "<p style=\"margin-top: 0;font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#404040\">");
-            outfile.write(newArticle);
-            outfile.close();
-
-        } catch (IOException ex) {
-            System.out.println(ex);
-        } finally {
-            try {
-                in.close();
-            } catch (IOException ex) {
-                System.out.println(ex);
-            }
-        }
+    /**
+     * Sets the article feed url
+     *
+     * @param feedUrl Feed url
+     */
+    public void setArticleFeedUrl(String feedUrl) {
+        jLabelFeedLink.setText(feedUrl);
     }
 
-    private String template(String text) {
-        String template = "<html><head></head>"
-                + "<body>"
-                + "<p style=\"margin-top: 0;font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#404040\">"
-                + text
-                + "</p>"
-                + "</body>"
-                + "</html>";
-        return template;
+    /**
+     * Sets the title of the news article
+     *
+     * @param title Article title
+     */
+    public void setArticleTitle(String title) {
+        jLabelArticleTitle.setText(title);
     }
 
-    private void archivesUI() {
-        gp = new JDialog(thisJFrame());
+    /**
+     * Set the number of articles downloaded
+     *
+     * @param totalArticlesDownloaded Number of articles retrieved from the feed
+     */
+    public void setTotalArticles(int totalArticlesDownloaded) {
+        totalArticles = totalArticlesDownloaded;
+        setCurrentArticleIndex(0, totalArticles);
+    }
+
+    /**
+     * Sets the number of the currently viewed article
+     *
+     * @param currentArticleIndex Number of the current article displayed
+     * @param articlesLength Total number of articles available
+     */
+    public void setCurrentArticleIndex(int currentArticleIndex, int articlesLength) {
+        System.out.println("cur: "+currentArticleIndex+" total: "+articlesLength);
+        jLabelCurrentArticle.setText((currentArticleIndex + 1) + " Of " + articlesLength + " Articles");
+    }
+
+    /**
+     * Sets the date the article was published
+     *
+     * @param date
+     */
+    public void setArticleDate(String date) {
+        jLabelArticleDate.setText(date);
+    }
+
+    /**
+     * Sets the image associated with a give article/news item.
+     *
+     * @param img Article image
+     */
+    public void setArticleImage(Image img) {
+        image = img.getScaledInstance(jPanelTop.getWidth(), jPanelTop.getHeight(), Image.SCALE_SMOOTH);
+        jPanelTop.repaint();
+    }
+
+    /**
+     * Sets the image associated with a give article/news item.
+     *
+     * @param img Article image
+     */
+    public void setArticleImage(Image img, int imageWidth, int imageHeight) {
+        image = img.getScaledInstance(jPanelTop.getWidth(), jPanelTop.getHeight(), Image.SCALE_SMOOTH);
+        System.out.println("h:" + jPanelTop.getHeight() + "w:" + jPanelTop.getWidth());
+        jPanelTop.repaint();
+    }
+
+    /**
+     * Get the index of the next article. If the index of the next article
+     * exceeds the number of articles available, the reset the index to 0.
+     *
+     * @return Index of the next article.
+     */
+    public int getNextArticleIndex() {
+        index = (index > totalArticles) ? index = 0 : index + 1;
+        setCurrentArticleIndex(index, totalArticles);
+        return index;
+    }
+
+    /**
+     * Get the index of the previous article. If the index of the last article
+     * is 0, then reset index to 0 to avoid getting ArrayOutOfBound Exception
+     *
+     * @return Index of the previous article.
+     */
+    public int getPrevArticleIndex() {
+        index = (index == 0) ? index = 0 : index - 1;
+        setCurrentArticleIndex(index, totalArticles);
+        return index;
+    }
+
+    /**
+     * Show/hide the loading feed spinner
+     *
+     * @param status
+     */
+    public void isLoadingArticle(boolean status) {
+        jLabelLoadingFeed.setVisible(status);
+    }
+
+    /**
+     * Gets the index of the selected news item
+     *
+     * @return
+     */
+    public int getSelectedNewsCategoryIndex() {
+        return jComboBoxNewsCategory.getSelectedIndex();
+    }
+
+    /**
+     * Adds itemListener to the categories JComboBox
+     *
+     * @param il
+     */
+    public void addJComboItemListener(ItemListener il) {
+        jComboBoxNewsCategory.addItemListener(il);
+    }
+
+    /**
+     * Sets the feed link URL
+     *
+     * @param link
+     */
+    public void setFeedLink(String link) {
+        jLabelFeedLink.setText(link);
+    }
+
+    public void addWmiGreenPolicyActionListener(ActionListener al) {
+        wmiGreenPolicy.addActionListener(al);
+    }
+
+    public void addWmiAboutActionListener(ActionListener al) {
+        wmiAbout.addActionListener(al);
+
+    }
+     /**
+     * Creates and shows the Green Policy dialog
+     */
+    public void initGreenPolicyDialog() {
+        final JDialog gp = new JDialog(thisJFrame());
         gp.setLayout(new BorderLayout());
-        JPanelArchives jpgp = new JPanelArchives();
-        ControllerArchives ca = new ControllerArchives(this, jpgp);
-        gp.setSize(913, 500);
-        System.out.println(jpgp.getWidth());
+        JPanelGreenPolicy jpgp = new JPanelGreenPolicy();
+        gp.setSize(313, 310);
         gp.add(jpgp);
         gp.addWindowFocusListener(new WindowFocusListener() {
             @Override
@@ -423,11 +314,96 @@ public class JFrameMainUI extends javax.swing.JFrame {
         int h = thisJFrame().getHeight();
         int locx = (int) thisJFrame().getLocation().getX();
         int locy = (int) thisJFrame().getLocation().getY();
-        System.out.println("loc (" + locx + " , " + locy + ")\nwidth: " + w + " height: " + h + " d h: " + gp.getHeight() + " d w: " + gp.getWidth());
         gp.setLocation((locx + w / 2) - (gp.getWidth() / 2), (locy + h / 2) - (gp.getHeight() / 2));
         gp.setUndecorated(true);
         gp.setOpacity((float) 1.0);
         gp.setVisible(true);
+    }
+
+    /**
+     * Creates and shows the About dialog.
+     */
+    public void initAboutDialog() {
+        final JDialog gp = new JDialog(thisJFrame());
+        gp.setLayout(new BorderLayout());
+        JPanelAbout jpgp = new JPanelAbout();
+        gp.setSize(282, 390);
+        gp.add(jpgp);
+        gp.addWindowFocusListener(new WindowFocusListener() {
+            @Override
+            public void windowLostFocus(WindowEvent e) {
+                gp.dispose();
+            }
+
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+            }
+        });
+        int w = thisJFrame().getWidth();
+        int h = thisJFrame().getHeight();
+        int locx = (int) thisJFrame().getLocation().getX();
+        int locy = (int) thisJFrame().getLocation().getY();
+        gp.setLocation((locx + w / 2) - (gp.getWidth() / 2), (locy + h / 2) - (gp.getHeight() / 2));
+        gp.setUndecorated(true);
+        gp.setOpacity((float) 1.0);
+        gp.setVisible(true);
+    }
+
+    /**
+     * Creates the hover effects on the buttons contained on the bottom JPanel
+     * i.e. The button changes color when the user hovers the mouse on top
+     */
+    private void createJBtnHoverEffects() {
+
+        for (Component comp : jPanelBottom.getComponents()) {
+            if (comp instanceof JButton) {
+                JButton myButton = (JButton) comp;
+                myButton.setFocusPainted(false);
+                myButton.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        JButton btn = (JButton) e.getSource();
+                        btn.setOpaque(true);
+                        btn.setBackground(new Color(204, 204, 204));
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        JButton btn = (JButton) e.getSource();
+                        btn.setOpaque(false);
+                    }
+                });
+            }
+        }
+    }
+
+    public void loadArticlesFromAchives() {
+        gp = new JDialog(thisJFrame());
+        gp.setLayout(new BorderLayout());
+        JPanelArchives jpgp = new JPanelArchives();
+        gp.setSize(800, 500);
+        gp.add(jpgp);
+        gp.addWindowFocusListener(new WindowFocusListener() {
+            @Override
+            public void windowLostFocus(WindowEvent e) {
+                gp.dispose();
+            }
+
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+            }
+        });
+        int w = thisJFrame().getWidth();
+        int h = thisJFrame().getHeight();
+        int locx = (int) thisJFrame().getLocation().getX();
+        int locy = (int) thisJFrame().getLocation().getY();
+        gp.setLocation((locx + w / 2) - (gp.getWidth() / 2), (locy + h / 2) - (gp.getHeight() / 2));
+        gp.setUndecorated(true);
+        gp.setOpacity((float) 1.0);
+        gp.setVisible(true);
+        Archives ca = new Archives(this, jpgp);
+        ca.startBackgroundWorker();
+        
     }
 
     public JDialog getGp() {
@@ -467,6 +443,115 @@ public class JFrameMainUI extends javax.swing.JFrame {
     }
 
     /**
+     * Build and Initialize WebMenu dropdown menu items
+     */
+    public final void initWebMenu() {
+        this.wmiTags = new WebMenuItem("Preferrences", Hotkey.T);
+        this.wmiNewNote = new WebMenuItem("Save News", Hotkey.V);
+        this.wmiAbout = new WebMenuItem("About MyNews", Hotkey.ESCAPE);
+        this.wmiGreenPolicy = new WebMenuItem("Our Green Policy", Hotkey.ALT_Y);
+        this.wmiClose = new WebMenuItem("You sure you want to switch off?", Hotkey.ALT_C);
+        this.wmiHelp = new WebMenuItem("Help/Tutorial", Hotkey.ALT_H);
+    }
+
+    /**
+     * Customize the JScrollBar with custom colors and styles by setting the
+     * scrollbar UI with a CustomScrollbarUI() class
+     */
+    public final void initCustomScrollBar() {
+        jScrollPane1.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
+        jScrollPane1.getVerticalScrollBar().setUI(new CustomScrollbarUI(Color.WHITE));
+        Object popup = jComboBoxNewsCategory.getUI().getAccessibleChild(jComboBoxNewsCategory, 0);
+        Component c = ((Container) popup).getComponent(0);
+        if (c instanceof JScrollPane) {
+            JScrollPane spane = (JScrollPane) c;
+            spane.getVerticalScrollBar().setUI(new CustomScrollbarUI(Color.WHITE));
+            JScrollBar scrollBar = spane.getVerticalScrollBar();
+            Dimension scrollBarDim = new Dimension(10, scrollBar.getPreferredSize().height);
+            scrollBar.setPreferredSize(scrollBarDim);
+        }
+        BasicComboPopup pop = (BasicComboPopup) popup;
+        pop.setBorder(null);
+    }
+
+    /**
+     * Initialize a Timer thats updates the application time/clock, and checks
+     * the internet connection persistently
+     *
+     * @param repeat
+     */
+    public final void initClockAndNetworkTimer(boolean repeat) {
+        ActionListener taskPerformer = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                if (TestInternetConnection.isNetAvailable()) {
+                    netStatus = true;
+                    jLabelStatus.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/online.png")));
+                    jLabelStatus.setText("[ Online ]");
+                    jLabelStatus.setToolTipText("Connection established!");
+                } else {
+                    if (counter == 0) {
+                        counter = 10;
+                    }
+                    netStatus = false;
+                    jLabelStatus.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/offline.png")));
+                    jLabelStatus.setText("Retry in " + counter + " secs");
+                    jLabelStatus.setToolTipText("Connection cannot be established!");
+                    counter--;
+                }
+                SystemTime time = new SystemTime();
+                jLabelDate.setText(time.getFullDate());
+                jLabelTime.setText(TimeToWords());
+            }
+        };
+        Timer timer = new Timer(1000, taskPerformer);
+        timer.setRepeats(repeat);
+        timer.start();
+    }
+
+    /**
+     * Converts time to word. i.e. 12:39 will be converted to Twelve Thirty Nine
+     *
+     * @return Time in word format
+     */
+    private String TimeToWords() {
+        SystemTime time = new SystemTime();
+        EnglishNumberToWord entw = new EnglishNumberToWord();
+        String min;
+        String hrs;
+        String am_pm;
+        if (time.getMin() < 10) {
+            min = "oh" + entw.convert(time.getMin());
+        } else {
+            min = entw.convert(time.getMin());
+        }
+        if (time.getHrs() > 12) {
+            hrs = entw.convert(time.getHrs() - 12);
+            am_pm = "pm";
+        } else {
+            hrs = entw.convert(time.getHrs());
+            am_pm = "am";
+        }
+        return "<html>" + hrs + " <font color=\"#ee5500\">" + min + "</font> <font color=\"#00a5f8\" size = \"4\">" + am_pm + "</font>";
+    }
+
+    /**
+     * Sets the whole UI to use a custom font
+     *
+     * @param f Font resource to use on the UI
+     */
+    public static void setUIFont(javax.swing.plaf.FontUIResource f) {
+        java.util.Enumeration keys = UIManager.getDefaults().keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = UIManager.get(key);
+            if (value != null && value instanceof javax.swing.plaf.FontUIResource) {
+                UIManager.put(key, f);
+            }
+        }
+    }
+
+    /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
@@ -477,8 +562,6 @@ public class JFrameMainUI extends javax.swing.JFrame {
 
         jPanel1 = new javax.swing.JPanel();
         jPanelHome = new javax.swing.JPanel();
-        jButtonNext = new javax.swing.JButton();
-        jButtonPrev = new javax.swing.JButton();
         jPanelTop = new javax.swing.JPanel(){
             @Override
             protected void paintComponent(Graphics g) {
@@ -489,27 +572,30 @@ public class JFrameMainUI extends javax.swing.JFrame {
         jLabelImage = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
         jLabelTime = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
         webSplitButtonMenu = new com.alee.extended.button.WebSplitButton();
-        jPanel4 = new javax.swing.JPanel();
+        jButton1 = new javax.swing.JButton();
+        jLabelDate = new javax.swing.JLabel();
+        jPanelCenter = new javax.swing.JPanel();
         jLabelArticleTitle = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
         jLabelArticleDate = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextPaneArticleContents = new javax.swing.JTextPane();
         jLabelFeedLink = new javax.swing.JLabel();
-        webComboBoxCat = new com.alee.laf.combobox.WebComboBox();
+        jButtonNext = new javax.swing.JButton();
+        jButtonPrev = new javax.swing.JButton();
+        jComboBoxNewsCategory = new javax.swing.JComboBox();
         jPanelBottom = new javax.swing.JPanel();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
-        jButton6 = new javax.swing.JButton();
-        jButton8 = new javax.swing.JButton();
-        jButton9 = new javax.swing.JButton();
-        jButton10 = new javax.swing.JButton();
+        jButtonDownload = new javax.swing.JButton();
+        jButtonLock = new javax.swing.JButton();
+        jButtonSettings = new javax.swing.JButton();
+        jButtonArchives = new javax.swing.JButton();
+        jButtonDelete = new javax.swing.JButton();
+        jButtonPrint = new javax.swing.JButton();
         jLabelLoadingFeed = new javax.swing.JLabel();
         jLabelStatus = new javax.swing.JLabel();
-        jSeparator2 = new javax.swing.JSeparator();
+        jLabelCurrentArticle = new javax.swing.JLabel();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 32767));
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setUndecorated(true);
@@ -527,10 +613,125 @@ public class JFrameMainUI extends javax.swing.JFrame {
         });
 
         jPanelHome.setBackground(new java.awt.Color(255, 255, 255));
+        jPanelHome.setLayout(new java.awt.BorderLayout());
 
-        jButtonNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/next.png"))); // NOI18N
+        jPanel6.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel6.setOpaque(false);
+
+        jLabelTime.setFont(new java.awt.Font("Segoe UI Semilight", 0, 28)); // NOI18N
+        jLabelTime.setForeground(new java.awt.Color(255, 255, 255));
+        jLabelTime.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabelTime.setText("03:25");
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+                .addContainerGap(86, Short.MAX_VALUE)
+                .addComponent(jLabelTime, javax.swing.GroupLayout.PREFERRED_SIZE, 246, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+                .addGap(1, 1, 1)
+                .addComponent(jLabelTime))
+        );
+
+        webSplitButtonMenu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/menu_32.png"))); // NOI18N
+        webSplitButtonMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                webSplitButtonMenuActionPerformed(evt);
+            }
+        });
+
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/power_32.png"))); // NOI18N
+        jButton1.setBorderPainted(false);
+        jButton1.setContentAreaFilled(false);
+        jButton1.setFocusPainted(false);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jLabelDate.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
+        jLabelDate.setForeground(new java.awt.Color(255, 255, 255));
+        jLabelDate.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabelDate.setText("March 12, 2015");
+
+        javax.swing.GroupLayout jPanelTopLayout = new javax.swing.GroupLayout(jPanelTop);
+        jPanelTop.setLayout(jPanelTopLayout);
+        jPanelTopLayout.setHorizontalGroup(
+            jPanelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTopLayout.createSequentialGroup()
+                .addGap(22, 22, 22)
+                .addGroup(jPanelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelTopLayout.createSequentialGroup()
+                        .addComponent(jLabelImage, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 584, Short.MAX_VALUE)
+                        .addComponent(jLabelDate, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelTopLayout.createSequentialGroup()
+                        .addComponent(webSplitButtonMenu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(683, 683, 683)
+                        .addComponent(jButton1)))
+                .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTopLayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        jPanelTopLayout.setVerticalGroup(
+            jPanelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTopLayout.createSequentialGroup()
+                .addGap(47, 47, 47)
+                .addGroup(jPanelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(webSplitButtonMenu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelTopLayout.createSequentialGroup()
+                        .addGap(30, 30, 30)
+                        .addComponent(jLabelImage, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(61, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTopLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabelDate)
+                        .addGap(1, 1, 1)
+                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(2, 2, 2))))
+        );
+
+        jPanelHome.add(jPanelTop, java.awt.BorderLayout.NORTH);
+
+        jPanelCenter.setBackground(new java.awt.Color(255, 255, 255));
+
+        jLabelArticleTitle.setFont(new java.awt.Font("Ebrima", 0, 24)); // NOI18N
+        jLabelArticleTitle.setForeground(new java.awt.Color(255, 102, 0));
+        jLabelArticleTitle.setText("<html>MyNews&trade;");
+
+        jLabelArticleDate.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
+        jLabelArticleDate.setForeground(new java.awt.Color(0, 153, 204));
+        jLabelArticleDate.setText("March 12, 2015 11:30AM");
+
+        jScrollPane1.setBorder(null);
+
+        jTextPaneArticleContents.setBorder(null);
+        jTextPaneArticleContents.setContentType("text/html"); // NOI18N
+        jTextPaneArticleContents.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
+        jTextPaneArticleContents.setForeground(new java.awt.Color(51, 51, 51));
+        jTextPaneArticleContents.setText("<html>\r\n  <head>\r\n  </head>\r\n  <body>\r\n<p style=\"font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#404040\">\nWelcome, and thankyou for using MyNews&trade;. This is a FREE software that delivers RSS news  (currently) from abc news feed [ <a href=\"#\">http://abcnews.go.com/Site/page/rss--3520115</a>.\n</p>\n<p style=\"font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#FF6600; font-size: 12px;\">\nWhat's an RSS?\n</p>\n<p style=\"font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#404040\">\nRSS (Rich Site Summary); originally RDF Site Summary; often called Really Simple Syndication, uses a family of standard web feed formats to publish frequently\n updated information: blog entries, news headlines, audio, video. An RSS document (called “feed”, “web feed”, or “channel”) includes full or summarized text\n, and metadata, like publishing date and author’s name.\nRSS feeds enable publishers to syndicate data automatically. A standard XML file format ensures compatibility with many different machines/programs. RSS feeds \nalso benefit users who want to receive timely updates from favourite websites or to aggregate data from many sites. Read More <a href=\"#\">http://en.wikipedia.org/wiki/RSS</a>\n<p style=\"font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#FF6600; font-size: 12px;\">\nAbout MyNews&trade;?\n</p>\n<p style=\"font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#404040\">\nThis is Java SE back-end and Java Swing UI application, that works by parsing RSS (Really Simple Syndicate)  from the abc news  feed. (Am currently working on multiple feeds). \nThe heart of the application is the ROME XML parser, that reads the feed output xml file and parses the tags to generate the new content and metadata. Once the feed is stripped\n off the xml tags, then the news content is simply passed to the UI to be displayed. See more on myblog <a href=\"#\">https://iworkslabs.wordpress.com/2015/03/11/mynews/</a>\n</p>\n<p style=\"font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#FF6600; font-size: 12px;\">\nHow to Use MyNews&trade;?\n</p>\n<p style=\"font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#404040\">\nNo special configuration is needed to run MyNews. If you are behind a proxy, then you will need to supply the proxy settings by clicking on the cog button. After suppling the proxy\ndetails, you will need to restart the application for the changes to take effect.\n</p>\n  </body>\r\n</html>\r\n");
+        jScrollPane1.setViewportView(jTextPaneArticleContents);
+
+        jLabelFeedLink.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
+        jLabelFeedLink.setForeground(new java.awt.Color(204, 0, 153));
+        jLabelFeedLink.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabelFeedLink.setText("https://iworkslabs.wordpress.com/2015/03/11/mynews/");
+
+        jButtonNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/linea-next.png"))); // NOI18N
         jButtonNext.setContentAreaFilled(false);
         jButtonNext.setFocusPainted(false);
+        jButtonNext.setPressedIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/linea_next_color.png"))); // NOI18N
+        jButtonNext.setRolloverIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/linea_next_color.png"))); // NOI18N
         jButtonNext.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 jButtonNextMouseEntered(evt);
@@ -545,9 +746,10 @@ public class JFrameMainUI extends javax.swing.JFrame {
             }
         });
 
-        jButtonPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/prev.png"))); // NOI18N
+        jButtonPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/linea-prev.png"))); // NOI18N
         jButtonPrev.setContentAreaFilled(false);
         jButtonPrev.setFocusPainted(false);
+        jButtonPrev.setRolloverIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/linea_prev_color.png"))); // NOI18N
         jButtonPrev.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 jButtonPrevMouseEntered(evt);
@@ -562,132 +764,66 @@ public class JFrameMainUI extends javax.swing.JFrame {
             }
         });
 
-        jPanel6.setBackground(new java.awt.Color(255, 255, 255));
-        jPanel6.setOpaque(false);
+        jComboBoxNewsCategory.setEditable(true);
+        jComboBoxNewsCategory.setModel(new javax.swing.DefaultComboBoxModel(new String[] { " News Category", " Top Stories", " World Headlines", " US Headlines", " Politics Headlines", " Entertainment Headlines", " International Headlines", " ESPN Sports", " Technology Headlines", " Money Headlines", " Health Headlines", " Travel Headlines" }));
 
-        jLabelTime.setFont(new java.awt.Font("Dotum", 0, 48)); // NOI18N
-        jLabelTime.setForeground(new java.awt.Color(255, 255, 255));
-        jLabelTime.setText("03:25");
-
-        jLabel4.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
-        jLabel4.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel4.setText("Sep 12, 2014");
-
-        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
-        jPanel6.setLayout(jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel6Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabelTime)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-        jPanel6Layout.setVerticalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabelTime, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-            .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jLabel4)
-                .addGap(0, 37, Short.MAX_VALUE))
-        );
-
-        webSplitButtonMenu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/menu_32.png"))); // NOI18N
-        webSplitButtonMenu.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                webSplitButtonMenuActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanelTopLayout = new javax.swing.GroupLayout(jPanelTop);
-        jPanelTop.setLayout(jPanelTopLayout);
-        jPanelTopLayout.setHorizontalGroup(
-            jPanelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTopLayout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(jPanelTopLayout.createSequentialGroup()
-                .addGap(22, 22, 22)
-                .addGroup(jPanelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(webSplitButtonMenu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabelImage, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanelTopLayout.setVerticalGroup(
-            jPanelTopLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTopLayout.createSequentialGroup()
-                .addGap(45, 45, 45)
-                .addComponent(webSplitButtonMenu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(32, 32, 32)
-                .addComponent(jLabelImage, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(2, 2, 2))
-        );
-
-        jPanel4.setBackground(new java.awt.Color(255, 255, 255));
-
-        jLabelArticleTitle.setFont(new java.awt.Font("Ebrima", 0, 24)); // NOI18N
-        jLabelArticleTitle.setForeground(new java.awt.Color(255, 102, 0));
-        jLabelArticleTitle.setText("Trout, Strasburg Giving Playoffs a Fresh Look");
-
-        jLabelArticleDate.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
-        jLabelArticleDate.setForeground(new java.awt.Color(0, 153, 204));
-        jLabelArticleDate.setText("Sep 12, 2014 8:30am");
-
-        jScrollPane1.setBorder(null);
-
-        jTextPaneArticleContents.setBorder(null);
-        jTextPaneArticleContents.setContentType("text/html"); // NOI18N
-        jTextPaneArticleContents.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
-        jTextPaneArticleContents.setForeground(new java.awt.Color(51, 51, 51));
-        jTextPaneArticleContents.setText("<html>\r\n  <head>\r\n  </head>\r\n  <body>\r\n<p style=\"font-family:Lao UI, Helvetica, Arial, Luxi Sans, sans-serif;color:#404040\">\ntest\n    </p>\r\n  </body>\r\n</html>\r\n");
-        jScrollPane1.setViewportView(jTextPaneArticleContents);
-
-        jLabelFeedLink.setFont(new java.awt.Font("Lao UI", 0, 12)); // NOI18N
-        jLabelFeedLink.setForeground(new java.awt.Color(204, 0, 153));
-        jLabelFeedLink.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        jLabelFeedLink.setText("Sep 12, 2014 8:30am");
-
-        webComboBoxCat.setModel(new javax.swing.DefaultComboBoxModel(new String[] { " News Category", " Top Stories", " World Headlines", " US Headlines", " Politics Headlines", " The Blotter from Brian Ross", " Money Headlines", " Technology Headlines", " Health Headlines", " Entertainment Headlines", " Travel Headlines", " ESPN Sports", " World News Headlines", " 20/20 Headlines", " Primetime Headlines", " Nightline Headlines", " Good Morning America Headlines", " This Week Headlines " }));
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+        javax.swing.GroupLayout jPanelCenterLayout = new javax.swing.GroupLayout(jPanelCenter);
+        jPanelCenter.setLayout(jPanelCenterLayout);
+        jPanelCenterLayout.setHorizontalGroup(
+            jPanelCenterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelCenterLayout.createSequentialGroup()
+                .addGap(5, 5, 5)
+                .addGroup(jPanelCenterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jSeparator1)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 707, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabelArticleTitle, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 528, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
-                                .addComponent(jLabelArticleDate, javax.swing.GroupLayout.PREFERRED_SIZE, 261, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanelCenterLayout.createSequentialGroup()
+                        .addComponent(jButtonPrev, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelCenterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelCenterLayout.createSequentialGroup()
+                                .addComponent(jLabelArticleDate, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabelFeedLink, javax.swing.GroupLayout.PREFERRED_SIZE, 229, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(webComboBoxCat, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                                .addComponent(jLabelFeedLink, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jComboBoxNewsCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 744, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonNext, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelCenterLayout.createSequentialGroup()
+                        .addComponent(jLabelArticleTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 615, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
+
+        jPanelCenterLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jButtonNext, jButtonPrev});
+
+        jPanelCenterLayout.setVerticalGroup(
+            jPanelCenterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelCenterLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
-                .addComponent(jLabelArticleTitle)
+                .addComponent(jLabelArticleTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(1, 1, 1)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(webComboBoxCat, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanelCenterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelFeedLink, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabelArticleDate, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                    .addComponent(jLabelArticleDate, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jComboBoxNewsCategory, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanelCenterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelCenterLayout.createSequentialGroup()
+                        .addGap(59, 59, 59)
+                        .addComponent(jButtonPrev, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelCenterLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(14, 14, 14))
+            .addGroup(jPanelCenterLayout.createSequentialGroup()
+                .addGap(138, 138, 138)
+                .addComponent(jButtonNext, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(96, 96, 96))
         );
+
+        jPanelCenterLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jButtonNext, jButtonPrev});
+
+        jPanelHome.add(jPanelCenter, java.awt.BorderLayout.CENTER);
 
         jPanelBottom.setBackground(new java.awt.Color(255, 255, 255));
         jPanelBottom.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -699,55 +835,70 @@ public class JFrameMainUI extends javax.swing.JFrame {
             }
         });
 
-        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/power_32.png"))); // NOI18N
-        jButton3.setBorderPainted(false);
-        jButton3.setContentAreaFilled(false);
-
-        jButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/download_32.png"))); // NOI18N
-        jButton4.setBorderPainted(false);
-        jButton4.setContentAreaFilled(false);
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        jButtonDownload.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/download_32.png"))); // NOI18N
+        jButtonDownload.setBorderPainted(false);
+        jButtonDownload.setContentAreaFilled(false);
+        jButtonDownload.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                jButtonDownloadActionPerformed(evt);
             }
         });
 
-        jButton5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/lock_32.png"))); // NOI18N
-        jButton5.setBorderPainted(false);
-        jButton5.setContentAreaFilled(false);
-
-        jButton6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/settings_32.png"))); // NOI18N
-        jButton6.setBorderPainted(false);
-        jButton6.setContentAreaFilled(false);
-
-        jButton8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/archive_32.png"))); // NOI18N
-        jButton8.setBorderPainted(false);
-        jButton8.setContentAreaFilled(false);
-        jButton8.addActionListener(new java.awt.event.ActionListener() {
+        jButtonLock.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/lock_32.png"))); // NOI18N
+        jButtonLock.setBorderPainted(false);
+        jButtonLock.setContentAreaFilled(false);
+        jButtonLock.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton8ActionPerformed(evt);
+                jButtonLockActionPerformed(evt);
             }
         });
 
-        jButton9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/delete_32.png"))); // NOI18N
-        jButton9.setBorderPainted(false);
-        jButton9.setContentAreaFilled(false);
+        jButtonSettings.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/settings_32.png"))); // NOI18N
+        jButtonSettings.setBorderPainted(false);
+        jButtonSettings.setContentAreaFilled(false);
+        jButtonSettings.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSettingsActionPerformed(evt);
+            }
+        });
 
-        jButton10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/print_32.png"))); // NOI18N
-        jButton10.setBorderPainted(false);
-        jButton10.setContentAreaFilled(false);
+        jButtonArchives.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/archive_32.png"))); // NOI18N
+        jButtonArchives.setBorderPainted(false);
+        jButtonArchives.setContentAreaFilled(false);
+        jButtonArchives.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonArchivesActionPerformed(evt);
+            }
+        });
 
-        jLabelLoadingFeed.setFont(new java.awt.Font("Lao UI", 0, 10)); // NOI18N
+        jButtonDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/delete_32.png"))); // NOI18N
+        jButtonDelete.setBorderPainted(false);
+        jButtonDelete.setContentAreaFilled(false);
+        jButtonDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteActionPerformed(evt);
+            }
+        });
+
+        jButtonPrint.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/print_32.png"))); // NOI18N
+        jButtonPrint.setBorderPainted(false);
+        jButtonPrint.setContentAreaFilled(false);
+
+        jLabelLoadingFeed.setFont(new java.awt.Font("Segoe UI Semilight", 0, 11)); // NOI18N
         jLabelLoadingFeed.setForeground(new java.awt.Color(51, 51, 51));
         jLabelLoadingFeed.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/feed_loader.GIF"))); // NOI18N
-        jLabelLoadingFeed.setText("Loading News. Hold On!");
+        jLabelLoadingFeed.setText("Loading Article. Hold On!");
         jLabelLoadingFeed.setIconTextGap(10);
 
-        jLabelStatus.setFont(new java.awt.Font("Lao UI", 0, 10)); // NOI18N
+        jLabelStatus.setFont(new java.awt.Font("Segoe UI Semilight", 0, 10)); // NOI18N
         jLabelStatus.setForeground(new java.awt.Color(102, 102, 102));
         jLabelStatus.setIcon(new javax.swing.ImageIcon(getClass().getResource("/mynews/resources/offline.png"))); // NOI18N
         jLabelStatus.setText("[ Offline ]");
         jLabelStatus.setIconTextGap(0);
+
+        jLabelCurrentArticle.setFont(new java.awt.Font("Segoe UI Semilight", 0, 11)); // NOI18N
+        jLabelCurrentArticle.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jLabelCurrentArticle.setText("0 Of 0 Articles");
 
         javax.swing.GroupLayout jPanelBottomLayout = new javax.swing.GroupLayout(jPanelBottom);
         jPanelBottom.setLayout(jPanelBottomLayout);
@@ -755,88 +906,62 @@ public class JFrameMainUI extends javax.swing.JFrame {
             jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelBottomLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jButton10)
+                .addComponent(jButtonPrint)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton9)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton8)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton4)
-                .addGap(36, 36, 36)
-                .addComponent(jLabelLoadingFeed, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jButtonDelete)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonArchives)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonDownload)
                 .addGap(18, 18, Short.MAX_VALUE)
-                .addComponent(jLabelStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton6)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton5)
+                .addGroup(jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(filler2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabelLoadingFeed, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jLabelStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton3)
+                .addComponent(jButtonSettings)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonLock)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabelCurrentArticle, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
+
+        jPanelBottomLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {filler2, jLabelLoadingFeed});
+
         jPanelBottomLayout.setVerticalGroup(
             jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelBottomLayout.createSequentialGroup()
-                .addGap(2, 2, 2)
-                .addGroup(jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButton8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabelLoadingFeed))
-                    .addGroup(jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jLabelStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(1, 1, 1))
-        );
-
-        jSeparator2.setForeground(new java.awt.Color(153, 153, 153));
-
-        javax.swing.GroupLayout jPanelHomeLayout = new javax.swing.GroupLayout(jPanelHome);
-        jPanelHome.setLayout(jPanelHomeLayout);
-        jPanelHomeLayout.setHorizontalGroup(
-            jPanelHomeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanelBottom, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jSeparator2)
-            .addGroup(jPanelHomeLayout.createSequentialGroup()
-                .addGroup(jPanelHomeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jPanelTop, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanelHomeLayout.createSequentialGroup()
-                        .addComponent(jButtonPrev, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonNext, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(0, 0, Short.MAX_VALUE))
-        );
-        jPanelHomeLayout.setVerticalGroup(
-            jPanelHomeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHomeLayout.createSequentialGroup()
-                .addComponent(jPanelTop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(jPanelHomeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelHomeLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanelHomeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButtonPrev, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButtonNext, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(59, 59, 59))
-                    .addGroup(jPanelHomeLayout.createSequentialGroup()
+                .addGap(1, 1, 1)
+                .addGroup(jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButtonLock)
+                    .addGroup(jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(jButtonPrint, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButtonDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jButtonDownload, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jButtonArchives, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanelBottomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jButtonSettings, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jLabelCurrentArticle, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanelBottomLayout.createSequentialGroup()
+                        .addComponent(jLabelLoadingFeed)
                         .addGap(1, 1, 1)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 1, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, 0)
-                .addComponent(jPanelBottom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(filler2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(0, 0, 0))
         );
+
+        jPanelBottomLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jButtonArchives, jButtonDelete, jButtonDownload, jButtonLock, jButtonPrint, jButtonSettings, jLabelCurrentArticle, jLabelStatus});
+
+        jPanelHome.add(jPanelBottom, java.awt.BorderLayout.SOUTH);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanelHome, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jPanelHome, javax.swing.GroupLayout.PREFERRED_SIZE, 849, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -847,13 +972,11 @@ public class JFrameMainUI extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -870,42 +993,21 @@ public class JFrameMainUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jPanel1MouseDragged
 
     private void jButtonNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNextActionPerformed
-        // TODO add your handling code here:
-        jLabelLoadingFeed.setVisible(true);
-        if (index >= feedSize) {
-            index = 0;
-        }
-        //loadImage(images[index]);
-        new LoadFeed(newsCat).execute();
-        System.out.println("index: " + index);
-        index++;
-        //jPanelTop.repaint();
 
 
     }//GEN-LAST:event_jButtonNextActionPerformed
 
     private void jButtonPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevActionPerformed
         // TODO add your handling code here:
-        jLabelLoadingFeed.setVisible(true);
-        if (index < 0) {
-            index = feedSize;
-        }
-        new LoadFeed(newsCat).execute();
-        index--;
-//        //jPanelTop.repaint();
-//        this.revalidate();
-//        this.pack();
 
     }//GEN-LAST:event_jButtonPrevActionPerformed
 
     private void jPanelBottomMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelBottomMouseEntered
-        // TODO add your handling code here:
-        jPanelBottom.setBackground(new Color(255, 140, 0));
+
     }//GEN-LAST:event_jPanelBottomMouseEntered
 
     private void jPanelBottomMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelBottomMouseExited
-        // TODO add your handling code here:
-        jPanelBottom.setBackground(new Color(255, 255, 255));
+
     }//GEN-LAST:event_jPanelBottomMouseExited
 
     private void webSplitButtonMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_webSplitButtonMenuActionPerformed
@@ -916,108 +1018,108 @@ public class JFrameMainUI extends javax.swing.JFrame {
         popupMenu.addSeparator();
         popupMenu.add(wmiAbout);
         popupMenu.add(wmiGreenPolicy);
+        popupMenu.addSeparator();
+        popupMenu.add(wmiHelp);
+        popupMenu.add(wmiClose);
+        wmiClose.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
         webSplitButtonMenu.setPopupMenu(popupMenu);
     }//GEN-LAST:event_webSplitButtonMenuActionPerformed
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    private void jButtonDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDownloadActionPerformed
         // TODO add your handling code here:
-        jLabelLoadingFeed.setText("Downloading News..");
-        jLabelLoadingFeed.setVisible(true);
-        new Download().execute();
-    }//GEN-LAST:event_jButton4ActionPerformed
+        JDialogLock dialog = new JDialogLock(this, true, jButtonDownload);
+        dialog.setLabelMsg("Download this Article?");
+        dialog.setVisible(true);
+    }//GEN-LAST:event_jButtonDownloadActionPerformed
 
-    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+    private void jButtonArchivesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonArchivesActionPerformed
         // TODO add your handling code here:
-        archivesUI();
+        //loadArticlesFromAchives();
 
-    }//GEN-LAST:event_jButton8ActionPerformed
+    }//GEN-LAST:event_jButtonArchivesActionPerformed
 
     private void jButtonPrevMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonPrevMouseEntered
         // TODO add your handling code here:
-        jButtonPrev.setOpaque(true);
-        jButtonPrev.setBackground(new Color(0, 204, 255));
     }//GEN-LAST:event_jButtonPrevMouseEntered
 
     private void jButtonPrevMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonPrevMouseExited
         // TODO add your handling code here:
-        jButtonPrev.setOpaque(false);
     }//GEN-LAST:event_jButtonPrevMouseExited
 
     private void jButtonNextMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonNextMouseEntered
         // TODO add your handling code here:
-        jButtonNext.setOpaque(true);
-        jButtonNext.setBackground(new Color(0, 204, 255));
     }//GEN-LAST:event_jButtonNextMouseEntered
 
     private void jButtonNextMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonNextMouseExited
         // TODO add your handling code here:
-        jButtonNext.setOpaque(false);
     }//GEN-LAST:event_jButtonNextMouseExited
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(JFrameMainUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(JFrameMainUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(JFrameMainUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(JFrameMainUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        System.exit(0);
+//        jPanelTop.setSize(new Dimension(this.getWidth(), 100));
+//        jPanelCenter.setSize(new Dimension(this.getWidth(), 500));
+//        this.revalidate();
+//        this.repaint();
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new JFrameMainUI().setVisible(true);
-            }
-        });
-    }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButtonSettingsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSettingsActionPerformed
+        // TODO add your handling code here:
+        JDialogSettings dialog = new JDialogSettings(this, true, jButtonSettings);
+        dialog.setVisible(true);
+    }//GEN-LAST:event_jButtonSettingsActionPerformed
+
+    private void jButtonLockActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLockActionPerformed
+        // TODO add your handling code here:
+        JDialogLock dialog = new JDialogLock(this, true, jButtonLock);
+        dialog.setVisible(true);
+    }//GEN-LAST:event_jButtonLockActionPerformed
+
+    private void jButtonDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteActionPerformed
+        // TODO add your handling code here:
+        JDialogLock dialog = new JDialogLock(this, true, jButtonDelete);
+        dialog.setLabelMsg("You can only Delete archived Articles!");
+        dialog.setVisible(true);
+    }//GEN-LAST:event_jButtonDeleteActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton10;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
-    private javax.swing.JButton jButton8;
-    private javax.swing.JButton jButton9;
+    private javax.swing.Box.Filler filler2;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButtonArchives;
+    private javax.swing.JButton jButtonDelete;
+    private javax.swing.JButton jButtonDownload;
+    private javax.swing.JButton jButtonLock;
     private javax.swing.JButton jButtonNext;
     private javax.swing.JButton jButtonPrev;
-    private javax.swing.JLabel jLabel4;
+    private javax.swing.JButton jButtonPrint;
+    private javax.swing.JButton jButtonSettings;
+    private javax.swing.JComboBox jComboBoxNewsCategory;
     private javax.swing.JLabel jLabelArticleDate;
     private javax.swing.JLabel jLabelArticleTitle;
+    private javax.swing.JLabel jLabelCurrentArticle;
+    private javax.swing.JLabel jLabelDate;
     private javax.swing.JLabel jLabelFeedLink;
     private javax.swing.JLabel jLabelImage;
     private javax.swing.JLabel jLabelLoadingFeed;
     private javax.swing.JLabel jLabelStatus;
     private javax.swing.JLabel jLabelTime;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanelBottom;
+    private javax.swing.JPanel jPanelCenter;
     private javax.swing.JPanel jPanelHome;
     private javax.swing.JPanel jPanelTop;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JSeparator jSeparator2;
     private javax.swing.JTextPane jTextPaneArticleContents;
-    private com.alee.laf.combobox.WebComboBox webComboBoxCat;
     private com.alee.extended.button.WebSplitButton webSplitButtonMenu;
     // End of variables declaration//GEN-END:variables
 }

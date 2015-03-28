@@ -29,33 +29,37 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Component id="jPanel1" max="32767" attributes="0"/>
-          <Component id="webLabel3" min="-2" max="-2" attributes="0"/>
+          <Component id="webLabel3" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <Component id="webLabel3" min="-2" max="-2" attributes="0"/>
-              <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-              <Component id="jPanel1" max="32767" attributes="0"/>
+              <EmptySpace max="32767" attributes="0"/>
+              <Component id="jPanel1" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
   </Layout>
   <SubComponents>
     <Container class="javax.swing.JPanel" name="jPanel1">
+      <Properties>
+        <Property name="opaque" type="boolean" value="false"/>
+      </Properties>
 
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Component id="webLabel4" alignment="0" max="32767" attributes="0"/>
+              <Component id="webLabel4" alignment="0" pref="311" max="32767" attributes="0"/>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
                   <Component id="webLabel4" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace min="0" pref="9" max="32767" attributes="0"/>
+                  <EmptySpace pref="20" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -67,10 +71,7 @@
               <Color blue="f0" green="f0" red="f0" type="rgb"/>
             </Property>
             <Property name="horizontalAlignment" type="int" value="0"/>
-            <Property name="text" type="java.lang.String" value="&lt;html&gt;&lt;p style=&quot;text-align:center&quot;&gt;&#xa;We are very passoinate about our enviroment &amp;amp; thats &lt;br/&gt;&#xa;why we have written this and all our application user manual&lt;br/&gt;&#xa; in e-format.&lt;br/&gt;&#xa;Please download it/them at &lt;a href=&quot;#&quot;&gt; http://www.chieflabs.com/products&lt;/a&gt;&lt;br/&gt;&#xa;LETS GO GREEN, LETS SAVE TREES!&lt;br/&gt;&#xa;chieflabs &amp;copy 2014.&lt;/p&gt;&#xa;"/>
-            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-              <Font name="Lao UI" size="10" style="0"/>
-            </Property>
+            <Property name="text" type="java.lang.String" value="&lt;html&gt;&lt;p style=&quot;text-align:center&quot;&gt;&#xa;We are very passoinate about our enviroment &amp;amp; thats &lt;br/&gt;&#xa;why we have written this and all our application user manuals&lt;br/&gt;&#xa; in e-format.&lt;br/&gt;&#xa;Please download it/them at &lt;a href=&quot;#&quot;&gt; http://www.chieflabs.com/products&lt;/a&gt;&lt;br/&gt;&#xa;LETS GO GREEN, LETS SAVE TREES!&lt;br/&gt;&#xa;chieflabs &amp;copy 2014.&lt;/p&gt;&#xa;"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="iconTextGap" type="int" value="20"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
@@ -88,7 +89,7 @@
         </Property>
         <Property name="horizontalAlignment" type="int" value="0"/>
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-          <Image iconType="3" name="/mynews/resources/paperless.png"/>
+          <Image iconType="3" name="/mynews/resources/gogreen.PNG"/>
         </Property>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Tahoma" size="10" style="0"/>

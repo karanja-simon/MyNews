@@ -5,6 +5,8 @@
  */
 package mynews.utils;
 
+import mynews.preferences.Preference;
+
 /**
  *
  * @author RESEARCH2
@@ -12,9 +14,14 @@ package mynews.utils;
 public class SystemProxySettings {
 
     public static void setProxySettings() {
-        System.setProperty("proxySet", "true");
-        System.setProperty("http.proxyHost", "192.168.101.11");
-        System.setProperty("http.proxyPort", "3128");
+        Preference.getPreferences();
+        System.setProperty("proxySet", Preference.isProxySet());
+        System.setProperty("http.proxyHost", Preference.getProxyHost());
+        System.setProperty("http.proxyPort", Preference.getProxyPort());
+        if(Preference.isAuthenticate()){
+        System.getProperties().put("http.proxyUser", Preference.getProxyUser());
+        System.getProperties().put("http.proxyPassword", Preference.getProxyPass());
+        }
     }
 
 }
